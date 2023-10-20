@@ -1,0 +1,49 @@
+name: 'Build and Deploy to Cloud Run'
+description: 'Build a Docker image and deploy it to Google Cloud Run'
+
+inputs:
+  gcp_credentials:
+    description: 'GCP Credentials JSON'
+    required: true
+  gcp_project:
+    description: 'GCP Project ID'
+    required: true
+  gcp_application:
+    description: 'GCP Cloud Run Application Name'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v0.4.0
+      with:
+        credentials_json: ${{ inputs.gcp_credentials }}
+
+    - name: Show gcloud version and configuration
+      run: |-
+        gcloud version
+        gcloud config list
+      shell: bash
+
+    - name: Build and Push Docker image
+      run: |-
+        gcloud builds submit --quiet --tag gcr.io/${{ inputs.gcp_project }}/${{ inputs.gcp_application }}:$GITHUB_SHA
+      shell: bash
+
+    - name: Deploy to Cloud Run
+      run: |-
+        gcloud run deploy ${{ inputs.gcp_application }} \
+          --image gcr.io/${{ inputs.gcp_project }}/${{ inputs.gcp_application }}:$GITHUB_SHA \
+          --platform managed \
+          --region us-central1 \
+          --allow-unauthenticated \
+          --memory=512M \
+          --cpu=1 \
+          --concurrency=150 \
+          --timeout=300 \
+          --max-instances=1
+      shell: bash
