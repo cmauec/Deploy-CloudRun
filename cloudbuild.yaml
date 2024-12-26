@@ -1,0 +1,29 @@
+steps:
+  # Build the Nginx image
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "gcr.io/${GCP_PROJECT}/nginx:${IMAGE_TAG}",
+        "-f",
+        "Dockerfile.nginx",
+        ".",
+      ]
+
+  # Build the image
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "gcr.io/${GCP_PROJECT}/${GCP_APPLICATION}:${IMAGE_TAG}",
+        "-f",
+        "Dockerfile",
+        ".",
+      ]
+
+# Images to push to Container Registry
+images:
+  - "gcr.io/${GCP_PROJECT}/nginx:${IMAGE_TAG}"
+  - "gcr.io/${GCP_PROJECT}/${GCP_APPLICATION}:${IMAGE_TAG}"

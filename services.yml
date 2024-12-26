@@ -1,0 +1,46 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ${GCP_APPLICATION}
+  annotations:
+    run.googleapis.com/description: ${GCP_PROJECT}
+    # Externally available
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/container-dependencies: "{nginx: [${GCP_APPLICATION}]}"
+        autoscaling.knative.dev/maxScale: "1"
+        autoscaling.knative.dev/minScale: "0"
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      containers:
+        - name: nginx
+          image: gcr.io/${GCP_PROJECT}/nginx:${IMAGE_TAG}
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+        - name: ${GCP_APPLICATION}
+          image: gcr.io/${GCP_PROJECT}/${GCP_APPLICATION}:${IMAGE_TAG}
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          startupProbe:
+            timeoutSeconds: 240
+            periodSeconds: 240
+            failureThreshold: 1
+            tcpSocket:
+              port: 8000
+          env:
+            - name: ENVIRONMENT_TEST
+              value: "${ENVIRONMENT_TEST}"
+      timeoutSeconds: 300
+      containerConcurrency: 150
+  traffic:
+    - percent: 100
+      tag: tag
