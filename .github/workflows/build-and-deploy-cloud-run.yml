@@ -3,9 +3,6 @@ name: Build and Deploy to Cloud Run
 on:
   workflow_call:
     inputs:
-      gcp_credentials:
-        required: true
-        type: string
       gcp_region:
         required: true
         type: string
@@ -25,6 +22,8 @@ on:
         type: string
         default: "services.yml"
     secrets:
+      gcp_credentials:
+        required: true
       extra_params:
         description: "JSON string with extra_params"
         required: false
