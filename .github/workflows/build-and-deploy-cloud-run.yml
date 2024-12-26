@@ -27,9 +27,6 @@ on:
     secrets:
       gcp_credentials:
         required: true
-      extra_params:
-        description: "JSON string with extra_params"
-        required: false
 
 jobs:
   deploy:
@@ -41,14 +38,17 @@ jobs:
 
       # Add this new step to process dynamic variables
       - name: Set dynamic environment variables
-        if: secrets.extra_params != ''
         run: |
-          echo '${{ secrets.extra_params }}' | jq -r 'to_entries | .[] | "export \(.key)=\(.value)"' >> $GITHUB_ENV
+          if [ ! -z "${{ secrets.extra_params }}" ]; then
+            echo '${{ secrets.extra_params }}' | jq -r 'to_entries | .[] | "export \(.key)=\(.value)"' >> $GITHUB_ENV
+          else
+            echo "No extra parameters provided."
+          fi
 
       - name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v0.4.0
         with:
-          credentials_json: ${{ inputs.gcp_credentials }}
+          credentials_json: ${{ secrets.gcp_credentials }}
 
       - name: Show gcloud version and configuration
         run: |-
