@@ -27,6 +27,9 @@ on:
     secrets:
       gcp_credentials:
         required: true
+      extra_params:
+        description: "JSON string with extra_params"
+        required: false
 
 jobs:
   deploy:
