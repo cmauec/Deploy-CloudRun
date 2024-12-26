@@ -24,6 +24,10 @@ on:
         required: false
         type: string
         default: "services.yml"
+      image_tag:
+        description: "Image tag"
+        required: true
+        type: string
     secrets:
       gcp_credentials:
         required: true
