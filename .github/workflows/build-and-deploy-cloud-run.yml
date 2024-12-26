@@ -9,6 +9,9 @@ on:
       gcp_application:
         required: true
         type: string
+      gcp_project:
+        required: true
+        type: string
       # Input para cloudbuild
       cloudbuild_file:
         description: "CloudBuild file name"
