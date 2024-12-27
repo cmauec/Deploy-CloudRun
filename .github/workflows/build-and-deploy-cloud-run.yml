@@ -66,6 +66,7 @@ jobs:
         run: |-
           export CLOUDBUILD_FILE="${{ inputs.cloudbuild_file }}"
           export IMAGE_TAG=${{ inputs.image_tag }}
+          printenv
           envsubst < $CLOUDBUILD_FILE > cloudbuild_deployed.yaml
           cat cloudbuild_deployed.yaml
           gcloud builds submit --quiet --config cloudbuild_deployed.yaml
@@ -74,6 +75,7 @@ jobs:
         run: |-
           export SERVICES_FILE="${{ inputs.services_file }}"
           export IMAGE_TAG=${{ inputs.image_tag }}
+          printenv
           envsubst < $SERVICES_FILE > services_deployed.yml
           cat services_deployed.yml
           gcloud run services replace services_deployed.yml --region ${{ inputs.gcp_region }}
