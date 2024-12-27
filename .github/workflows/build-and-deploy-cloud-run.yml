@@ -47,6 +47,7 @@ jobs:
         run: |
           if [ ! -z "${{ secrets.extra_params }}" ]; then
             echo '${{ secrets.extra_params }}' | jq -r 'to_entries | .[] | "export \(.key)=\(.value)"' >> $GITHUB_ENV
+            printenv
           else
             echo "No extra parameters provided."
           fi
