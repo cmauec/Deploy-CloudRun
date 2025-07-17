@@ -1,0 +1,75 @@
+name: Build and Deploy to Cloud Run
+
+on:
+  workflow_call:
+    inputs:
+      gcp_region:
+        required: true
+        type: string
+      gcp_application:
+        required: true
+        type: string
+      gcp_project:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+      # Input para cloudbuild
+      cloudbuild_file:
+        description: "CloudBuild file name"
+        required: false
+        type: string
+        default: "cloudbuild.yaml"
+      # Input para services
+      services_file:
+        description: "Services file name"
+        required: false
+        type: string
+        default: "services.yml"
+    secrets:
+      gcp_credentials:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v0.4.0
+        with:
+          credentials_json: ${{ secrets.gcp_credentials }}
+
+      - name: Show gcloud version and configuration
+        run: |-
+          gcloud version
+          gcloud config list
+
+      - name: Build and Push Docker image
+        run: |-
+          export CLOUDBUILD_FILE="${{ inputs.cloudbuild_file }}"
+          export IMAGE_TAG=${{ inputs.image_tag }}
+          export GCP_PROJECT=${{ inputs.gcp_project }}
+          export GCP_APPLICATION=${{ inputs.gcp_application }}
+          envsubst < $CLOUDBUILD_FILE > cloudbuild_deployed.yaml
+          gcloud builds submit --quiet --config cloudbuild_deployed.yaml
+
+      - name: Deploy to Cloud Run
+        run: |-
+          export SERVICES_FILE="${{ inputs.services_file }}"
+          export IMAGE_TAG=${{ inputs.image_tag }}
+          export GCP_PROJECT=${{ inputs.gcp_project }}
+          export GCP_APPLICATION=${{ inputs.gcp_application }}
+          envsubst < $SERVICES_FILE > services_deployed.yml
+          gcloud run services replace services_deployed.yml --region ${{ inputs.gcp_region }}
+
+      - name: Add IAM policy binding
+        run: |-
+          gcloud run services add-iam-policy-binding ${{ inputs.gcp_application }} \
+            --region ${{ inputs.gcp_region }} \
+            --member="allUsers" \
+            --role="roles/run.invoker"
